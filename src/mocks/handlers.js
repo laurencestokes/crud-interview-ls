@@ -23,8 +23,6 @@ export const handlers = [
       lastName,
     });
 
-    // check if user name already exists
-
     return HttpResponse.json('User created!', {
       status: 201,
       headers: {
@@ -38,7 +36,6 @@ export const handlers = [
 
     const user = await db.user.findFirst({ id });
     if (!user) {
-      // returns with status code 404
       return HttpResponse.json(`User not found`, {
         status: 404,
         headers: {
@@ -68,7 +65,6 @@ export const handlers = [
     const user = await db.user.findFirst({ id });
 
     if (!user) {
-      // returns with status code 404
       return HttpResponse.json(`User not found`, {
         status: 404,
         headers: {
