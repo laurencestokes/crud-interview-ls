@@ -7,7 +7,7 @@
     "dev": "vite",
     "prebuild": "rm -rf ./dist",
     "build": "tsc -b && vite build",
-    "lint": "eslint --ignore-path .eslintignore --ext .js,.ts,.tsx .",
+    "lint": "eslint --ignore-pattern 'node_modules' --ext .js,.ts,.tsx .",
     "check-types": "tsc",
     "prettier": "prettier --ignore-path .eslintignore \"**/*.+(js|json|ts|tsx)\"",
     "format": "yarn prettier -- --write",

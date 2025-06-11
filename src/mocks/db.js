@@ -1,6 +1,6 @@
 // src/mocks/db.js
-import { faker } from '@faker-js/faker'
-import { factory, primaryKey } from '@mswjs/data'
+import { faker } from '@faker-js/faker';
+import { factory, primaryKey } from '@mswjs/data';
 
 export const db = factory({
   // Create a "user" model,
@@ -11,4 +11,4 @@ export const db = factory({
     lastName: () => 'Last name',
     dateOfBirth: () => Date.now(),
   },
-})
+});
