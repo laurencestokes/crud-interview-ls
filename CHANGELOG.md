@@ -1,3 +1,11 @@
+## 1.1.0 (2025-06-12)
+
+* 1.1.0 ([9049238](https://github.com/laurencestokes/crud-interview-ls/commit/9049238))
+* chore: rename version script to changelog in package.json ([45758f6](https://github.com/laurencestokes/crud-interview-ls/commit/45758f6))
+* feat: implement theme toggle  with Material-UI integration and update App layout ([05051f2](https://github.com/laurencestokes/crud-interview-ls/commit/05051f2))
+
+
+
 ## 1.0.0 (2025-06-12)
 
 * chore: add CI workflow for automated validate and testing ([b7f8105](https://github.com/laurencestokes/crud-interview-ls/commit/b7f8105))
