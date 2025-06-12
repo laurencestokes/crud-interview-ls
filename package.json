@@ -17,7 +17,7 @@
     "test": "jest",
     "test:ci": "jest --ci",
     "test-coverage": "jest --collectCoverage=true",
-    "version": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "version": "conventional-changelog -p angular -s",
     "test:badges": "yarn test-coverage && jest-coverage-badges --input coverage/coverage-summary.json",
     "test:readme-badges": "yarn test:badges && jest-coverage-badges --input \"coverage/coverage-summary.json\" --output badges",
     "prepublish": "rm -rf dist && tsc",
