@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UserForm from './UserForm';
 import { User } from '../types';
@@ -38,18 +44,20 @@ describe('UserForm', () => {
   it('validates required fields', async () => {
     renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    const lastNameInput = screen.getByTestId('last-name-input');
-    fireEvent.change(lastNameInput, { target: { value: 'test' } });
-    fireEvent.blur(lastNameInput);
-    fireEvent.change(lastNameInput, { target: { value: '' } });
+    await act(async () => {
+      const lastNameInput = screen.getByTestId('last-name-input');
+      fireEvent.change(lastNameInput, { target: { value: 'test' } });
+      fireEvent.blur(lastNameInput);
+      fireEvent.change(lastNameInput, { target: { value: '' } });
 
-    const dateOfBirthInput = screen.getByTestId('date-of-birth-input');
-    fireEvent.change(dateOfBirthInput, { target: { value: '01/01/1990' } });
-    fireEvent.blur(dateOfBirthInput);
-    fireEvent.change(dateOfBirthInput, { target: { value: '' } });
+      const dateOfBirthInput = screen.getByTestId('date-of-birth-input');
+      fireEvent.change(dateOfBirthInput, { target: { value: '01/01/1990' } });
+      fireEvent.blur(dateOfBirthInput);
+      fireEvent.change(dateOfBirthInput, { target: { value: '' } });
 
-    const submitButton = screen.getByTestId('submit-button');
-    fireEvent.click(submitButton);
+      const submitButton = screen.getByTestId('submit-button');
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
@@ -67,8 +75,10 @@ describe('UserForm', () => {
     futureDate.setFullYear(futureDate.getFullYear() + 1);
     const formattedDate = format(futureDate, 'dd/MM/yyyy');
 
-    fireEvent.change(dateInput, { target: { value: formattedDate } });
-    fireEvent.blur(dateInput);
+    await act(async () => {
+      fireEvent.change(dateInput, { target: { value: formattedDate } });
+      fireEvent.blur(dateInput);
+    });
 
     await waitFor(() => {
       expect(
@@ -80,16 +90,18 @@ describe('UserForm', () => {
   it('submits valid data', async () => {
     renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    const firstNameInput = screen.getByTestId('first-name-input');
-    const lastNameInput = screen.getByTestId('last-name-input');
-    const dateInput = screen.getByTestId('date-of-birth-input');
+    await act(async () => {
+      const firstNameInput = screen.getByTestId('first-name-input');
+      const lastNameInput = screen.getByTestId('last-name-input');
+      const dateInput = screen.getByTestId('date-of-birth-input');
 
-    fireEvent.change(firstNameInput, { target: { value: 'John' } });
-    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
-    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+      fireEvent.change(firstNameInput, { target: { value: 'John' } });
+      fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+      fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
 
-    const submitButton = screen.getByTestId('submit-button');
-    fireEvent.click(submitButton);
+      const submitButton = screen.getByTestId('submit-button');
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -104,16 +116,18 @@ describe('UserForm', () => {
     mockOnSubmit.mockImplementation(() => new Promise(() => {}));
     renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    const firstNameInput = screen.getByTestId('first-name-input');
-    const lastNameInput = screen.getByTestId('last-name-input');
-    const dateInput = screen.getByTestId('date-of-birth-input');
+    await act(async () => {
+      const firstNameInput = screen.getByTestId('first-name-input');
+      const lastNameInput = screen.getByTestId('last-name-input');
+      const dateInput = screen.getByTestId('date-of-birth-input');
 
-    fireEvent.change(firstNameInput, { target: { value: 'John' } });
-    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
-    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+      fireEvent.change(firstNameInput, { target: { value: 'John' } });
+      fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+      fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
 
-    const submitButton = screen.getByTestId('submit-button');
-    fireEvent.click(submitButton);
+      const submitButton = screen.getByTestId('submit-button');
+      fireEvent.click(submitButton);
+    });
 
     expect(
       screen.getByRole('button', { name: /creating/i })
@@ -133,8 +147,10 @@ describe('UserForm', () => {
       <UserForm defaultValues={existingUser} onSubmit={mockOnSubmit} />
     );
 
-    const submitButton = screen.getByTestId('submit-button');
-    fireEvent.click(submitButton);
+    await act(async () => {
+      const submitButton = screen.getByTestId('submit-button');
+      fireEvent.click(submitButton);
+    });
 
     expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument();
   });
@@ -145,16 +161,18 @@ describe('UserForm', () => {
 
     renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    const firstNameInput = screen.getByTestId('first-name-input');
-    const lastNameInput = screen.getByTestId('last-name-input');
-    const dateInput = screen.getByTestId('date-of-birth-input');
+    await act(async () => {
+      const firstNameInput = screen.getByTestId('first-name-input');
+      const lastNameInput = screen.getByTestId('last-name-input');
+      const dateInput = screen.getByTestId('date-of-birth-input');
 
-    fireEvent.change(firstNameInput, { target: { value: 'John' } });
-    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
-    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+      fireEvent.change(firstNameInput, { target: { value: 'John' } });
+      fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+      fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
 
-    const submitButton = screen.getByTestId('submit-button');
-    fireEvent.click(submitButton);
+      const submitButton = screen.getByTestId('submit-button');
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(

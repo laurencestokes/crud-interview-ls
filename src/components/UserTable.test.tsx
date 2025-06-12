@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UserTable from './UserTable';
@@ -102,10 +108,15 @@ describe('UserTable', () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    await act(async () => {
       const editButton = screen.getByTestId('edit-user-1');
       fireEvent.click(editButton);
-      expect(mockOnEdit).toHaveBeenCalledWith(mockUsers[0]);
     });
+
+    expect(mockOnEdit).toHaveBeenCalledWith(mockUsers[0]);
   });
 
   it('handles delete action', async () => {
@@ -118,10 +129,15 @@ describe('UserTable', () => {
     );
 
     await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    await act(async () => {
       const deleteButton = screen.getByTestId('delete-user-1');
       fireEvent.click(deleteButton);
-      expect(mockOnDelete).toHaveBeenCalledWith(mockUsers[0].id);
     });
+
+    expect(mockOnDelete).toHaveBeenCalledWith(mockUsers[0].id);
   });
 
   it('disables delete button while deleting', async () => {
@@ -138,9 +154,11 @@ describe('UserTable', () => {
     );
 
     await waitFor(() => {
-      const deleteButton = screen.getByTestId('delete-user-1');
-      expect(deleteButton).toBeDisabled();
+      expect(screen.getByText('John')).toBeInTheDocument();
     });
+
+    const deleteButton = screen.getByTestId('delete-user-1');
+    expect(deleteButton).toBeDisabled();
   });
 
   it('shows 1 row selected text when 1 user is selected', async () => {
@@ -159,8 +177,10 @@ describe('UserTable', () => {
     });
 
     // Select first user
-    const checkboxes = screen.getAllByRole('checkbox', { hidden: true });
-    fireEvent.click(checkboxes[1]); // Select first user
+    await act(async () => {
+      const checkboxes = screen.getAllByRole('checkbox', { hidden: true });
+      fireEvent.click(checkboxes[1]); // Select first user
+    });
 
     // Verify "1 selected" appears
     await waitFor(() => {
