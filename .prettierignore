@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+dist
+
+# Mock files
+src/mocks/**/*
+src/mocks.d.ts
+
+# Build output
+build
+coverage
+
+# Config files
+eslint.config.js 
