@@ -4,10 +4,26 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+const isProd = import.meta.env.PROD;
+
 async function enableMocking() {
   const { worker } = await import('./mocks/browser');
 
-  return worker.start();
+  return (
+    worker as {
+      start: ({
+        serviceWorker,
+      }: {
+        serviceWorker: { url: string };
+      }) => Promise<void>;
+    }
+  ).start({
+    serviceWorker: {
+      url: isProd
+        ? '/crud-interview-ls/mockServiceWorker.js'
+        : '/mockServiceWorker.js',
+    },
+  });
 }
 
 enableMocking().then(() => {
