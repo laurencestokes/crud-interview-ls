@@ -23,6 +23,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import UserForm from './components/UserForm';
 
 interface User {
   id: string;
@@ -70,7 +71,6 @@ function App() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [form, setForm] = useState({ firstName: '', lastName: '', dateOfBirth: '' });
   const [error, setError] = useState<string | null>(null);
 
   // Fetch users
@@ -108,18 +108,12 @@ function App() {
 
   const handleOpenAdd = () => {
     setEditingUser(null);
-    setForm({ firstName: '', lastName: '', dateOfBirth: '' });
     setDialogOpen(true);
     setError(null);
   };
 
   const handleOpenEdit = (user: User) => {
     setEditingUser(user);
-    setForm({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      dateOfBirth: user.dateOfBirth,
-    });
     setDialogOpen(true);
     setError(null);
   };
@@ -127,22 +121,6 @@ function App() {
   const handleClose = () => {
     setDialogOpen(false);
     setError(null);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSave = () => {
-    if (editingUser) {
-      updateMutation.mutate({ ...editingUser, ...form });
-    } else {
-      createMutation.mutate(form);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
   };
 
   return (
@@ -184,7 +162,7 @@ function App() {
                         <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
                           <EditIcon />
                         </IconButton>
-                        <IconButton color="error" onClick={() => handleDelete(user.id)} disabled={deleteMutation.isPending}>
+                        <IconButton color="error" onClick={() => deleteMutation.mutate(user.id)} disabled={deleteMutation.isPending}>
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -206,43 +184,20 @@ function App() {
         {/* Add/Edit User Dialog */}
         <Dialog open={dialogOpen} onClose={handleClose} fullWidth maxWidth="xs">
           <DialogTitle>{editingUser ? 'Edit User' : 'Add User'}</DialogTitle>
-          <Box component="form" onSubmit={e => { e.preventDefault(); handleSave(); }}>
-            <DialogContent>
-              {error && <Alert severity="error">{error}</Alert>}
-              <TextField
-                margin="normal"
-                label="First Name"
-                name="firstName"
-                value={form.firstName}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                margin="normal"
-                label="Last Name"
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-                fullWidth
-              />
-              <TextField
-                margin="normal"
-                label="Date of Birth"
-                name="dateOfBirth"
-                type="date"
-                value={form.dateOfBirth}
-                onChange={handleChange}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button type="submit" variant="contained" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingUser ? 'Save' : 'Add'}
-              </Button>
-            </DialogActions>
-          </Box>
+          <UserForm
+            defaultValues={editingUser || undefined}
+            onSubmit={(data) => {
+              if (editingUser) {
+                updateMutation.mutate({ ...editingUser, ...data });
+              } else {
+                createMutation.mutate({
+                  ...data,
+                  firstName: data.firstName ?? '',
+                });
+              }
+              handleClose();
+            }}
+          />
         </Dialog>
       </Container>
     </Box>

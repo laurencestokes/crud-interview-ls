@@ -1,111 +1,100 @@
-import { useState } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import {
     TextField,
     Button,
-    Box,
     Alert,
     Stack,
 } from '@mui/material';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+
+const userSchema = z.object({
+    firstName: z.string().optional(),
+    lastName: z.string().min(1, 'Last name is required'),
+    dateOfBirth: z
+        .string()
+        .min(1, 'Date of birth is required')
+        .refine(
+            (val) => {
+                if (!val) return false;
+                const selectedDate = new Date(val);
+                const today = new Date();
+                return selectedDate <= today;
+            },
+            { message: 'Date of birth cannot be in the future' }
+        ),
+});
+
+type UserFormValues = z.infer<typeof userSchema>;
 
 interface UserFormProps {
-    onSubmit?: (user: {
-        firstName?: string;
-        lastName: string;
-        dateOfBirth: string;
-    }) => void;
+    onSubmit?: (user: UserFormValues) => void;
+    defaultValues?: Partial<UserFormValues>;
 }
 
-const UserForm = ({ onSubmit }: UserFormProps) => {
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [dateOfBirth, setDateOfBirth] = useState('');
-    const [error, setError] = useState<string | null>(null);
+const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
 
-    const queryClient = useQueryClient();
-
-    const createUser = useMutation({
-        mutationFn: async (user: { firstName?: string; lastName: string; dateOfBirth: string }) => {
-            const response = await fetch('https://example.com/user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(user),
-            });
-            if (!response.ok) {
-                throw new Error('Failed to create user');
-            }
-            return response.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            setFirstName('');
-            setLastName('');
-            setDateOfBirth('');
-            setError(null);
-        },
-        onError: () => {
-            setError('Failed to create user. Please try again.');
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset,
+    } = useForm<UserFormValues>({
+        resolver: zodResolver(userSchema),
+        mode: 'onSubmit',
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            dateOfBirth: '',
+            ...defaultValues,
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
+    useEffect(() => {
+        reset({
+            firstName: '',
+            lastName: '',
+            dateOfBirth: '',
+            ...defaultValues,
+        });
+    }, [defaultValues, reset]);
 
-        if (!lastName) {
-            setError('Last name is required');
-            return;
-        }
-
-        const selectedDate = new Date(dateOfBirth);
-        const today = new Date();
-        if (selectedDate > today) {
-            setError('Date of birth cannot be in the future');
-            return;
-        }
-
-        const user = { firstName, lastName, dateOfBirth };
-        createUser.mutate(user);
-        onSubmit?.(user);
+    const onFormSubmit = (data: UserFormValues) => {
+        onSubmit?.(data);
     };
 
+    console.log(errors);
     return (
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
             <Stack spacing={3}>
-                {error && <Alert severity="error">{error}</Alert>}
+                {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
 
                 <TextField
                     label="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    {...register('firstName')}
                     fullWidth
+                    error={!!errors.firstName}
+                    helperText={errors.firstName?.message}
                 />
 
                 <TextField
                     label="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    {...register('lastName')}
                     required
                     fullWidth
-                    error={!!error && !lastName}
-                    helperText={error && !lastName ? 'Last name is required' : ''}
+                    error={!!errors.lastName}
+                    helperText={errors.lastName?.message}
                 />
 
                 <TextField
                     label="Date of Birth"
                     type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    {...register('dateOfBirth')}
                     required
                     fullWidth
-                    error={!!(error && dateOfBirth && new Date(dateOfBirth) > new Date())}
-                    helperText={
-                        error && dateOfBirth && new Date(dateOfBirth) > new Date()
-                            ? 'Date of birth cannot be in the future'
-                            : ''
-                    }
+                    error={!!errors.dateOfBirth}
+                    helperText={errors.dateOfBirth?.message}
                 />
 
                 <Button
@@ -113,12 +102,14 @@ const UserForm = ({ onSubmit }: UserFormProps) => {
                     variant="contained"
                     color="primary"
                     size="large"
-                    disabled={createUser.isPending}
+                    disabled={isSubmitting}
                 >
-                    {createUser.isPending ? 'Creating...' : 'Create User'}
+                    {isSubmitting
+                        ? (defaultValues && defaultValues.lastName ? 'Saving...' : 'Creating...')
+                        : (defaultValues && defaultValues.lastName ? 'Save' : 'Create User')}
                 </Button>
             </Stack>
-        </Box>
+        </form>
     );
 };
 
