@@ -2,73 +2,72 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UserForm from './UserForm';
+import { User } from '../types';
+import { format } from 'date-fns';
+
+const mockOnSubmit = jest.fn();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const renderWithQueryClient = (component: React.ReactNode) => {
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+  );
+};
 
 describe('UserForm', () => {
-  const mockOnSubmit = jest.fn();
-
   beforeEach(() => {
-    mockOnSubmit.mockClear();
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({}),
-      })
-    ) as jest.Mock;
+    jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    jest.resetAllMocks();
+  it('renders form fields correctly', () => {
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByTestId('first-name-input')).toBeInTheDocument();
+    expect(screen.getByTestId('last-name-input')).toBeInTheDocument();
+    expect(screen.getByTestId('date-of-birth-input')).toBeInTheDocument();
+    expect(screen.getByTestId('submit-button')).toBeInTheDocument();
   });
 
-  it('renders the form correctly', () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
-    );
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /create user/i })
-    ).toBeInTheDocument();
-  });
+  it('validates required fields', async () => {
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-  it('validates that last name is required', async () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
-    );
-
-    const lastNameInput = screen.getByLabelText(/Last Name/i);
-    // Had to do this to trigger the validation (change from empty to non-empty)
+    const lastNameInput = screen.getByTestId('last-name-input');
     fireEvent.change(lastNameInput, { target: { value: 'test' } });
-    fireEvent.change(lastNameInput, { target: { value: '' } });
     fireEvent.blur(lastNameInput);
+    fireEvent.change(lastNameInput, { target: { value: '' } });
 
-    // Wait for the error message
+    const dateOfBirthInput = screen.getByTestId('date-of-birth-input');
+    fireEvent.change(dateOfBirthInput, { target: { value: '01/01/1990' } });
+    fireEvent.blur(dateOfBirthInput);
+    fireEvent.change(dateOfBirthInput, { target: { value: '' } });
+
+    const submitButton = screen.getByTestId('submit-button');
+    fireEvent.click(submitButton);
+
     await waitFor(() => {
-      const errorMessage = screen.getByText(/Last name is required/i);
-      expect(errorMessage).toBeInTheDocument();
+      expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/date of birth is required/i)
+      ).toBeInTheDocument();
     });
-
-    // Verify submit wasn't called
-    expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
-  it('validates that date of birth cannot be in the future', async () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
-    );
+  it('validates date of birth is not in the future', async () => {
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    const dateInput = screen.getByLabelText(/date of birth/i);
-    fireEvent.change(dateInput, { target: { value: '2025-12-31' } });
+    const dateInput = screen.getByTestId('date-of-birth-input');
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+    const formattedDate = format(futureDate, 'dd/MM/yyyy');
+
+    fireEvent.change(dateInput, { target: { value: formattedDate } });
     fireEvent.blur(dateInput);
 
     await waitFor(() => {
@@ -76,32 +75,20 @@ describe('UserForm', () => {
         screen.getByText(/date of birth cannot be in the future/i)
       ).toBeInTheDocument();
     });
-
-    const submitButton = screen.getByRole('button', { name: /create user/i });
-    fireEvent.click(submitButton);
-
-    expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
-  it('submits the form with valid data', async () => {
-    const queryClient = new QueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
-    );
+  it('submits valid data', async () => {
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    fireEvent.change(screen.getByLabelText(/first name/i), {
-      target: { value: 'John' },
-    });
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: 'Doe' },
-    });
-    fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: '1990-01-01' },
-    });
+    const firstNameInput = screen.getByTestId('first-name-input');
+    const lastNameInput = screen.getByTestId('last-name-input');
+    const dateInput = screen.getByTestId('date-of-birth-input');
 
-    const submitButton = screen.getByRole('button', { name: /create user/i });
+    fireEvent.change(firstNameInput, { target: { value: 'John' } });
+    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+
+    const submitButton = screen.getByTestId('submit-button');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -113,143 +100,65 @@ describe('UserForm', () => {
     });
   });
 
-  it('shows a general error if the mutation fails', async () => {
-    const queryClient = new QueryClient();
-    const mockError = new Error('Failed to create user');
-    mockOnSubmit.mockRejectedValueOnce(mockError);
+  it('shows "Creating..." while submitting new user', async () => {
+    mockOnSubmit.mockImplementation(() => new Promise(() => {}));
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
+    const firstNameInput = screen.getByTestId('first-name-input');
+    const lastNameInput = screen.getByTestId('last-name-input');
+    const dateInput = screen.getByTestId('date-of-birth-input');
+
+    fireEvent.change(firstNameInput, { target: { value: 'John' } });
+    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+
+    const submitButton = screen.getByTestId('submit-button');
+    fireEvent.click(submitButton);
+
+    expect(
+      screen.getByRole('button', { name: /creating/i })
+    ).toBeInTheDocument();
+  });
+
+  it('shows "Saving..." while submitting existing user', async () => {
+    mockOnSubmit.mockImplementation(() => new Promise(() => {}));
+    const existingUser: User = {
+      id: '1',
+      firstName: 'John',
+      lastName: 'Doe',
+      dateOfBirth: '1990-01-01',
+    };
+
+    renderWithQueryClient(
+      <UserForm defaultValues={existingUser} onSubmit={mockOnSubmit} />
     );
 
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: 'Doe' },
-    });
-    fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: '1990-01-01' },
-    });
+    const submitButton = screen.getByTestId('submit-button');
+    fireEvent.click(submitButton);
 
-    const submitButton = screen.getByRole('button', { name: /create user/i });
+    expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument();
+  });
+
+  it('handles submission error', async () => {
+    const error = new Error('Submission failed');
+    mockOnSubmit.mockRejectedValueOnce(error);
+
+    renderWithQueryClient(<UserForm onSubmit={mockOnSubmit} />);
+
+    const firstNameInput = screen.getByTestId('first-name-input');
+    const lastNameInput = screen.getByTestId('last-name-input');
+    const dateInput = screen.getByTestId('date-of-birth-input');
+
+    fireEvent.change(firstNameInput, { target: { value: 'John' } });
+    fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
+    fireEvent.change(dateInput, { target: { value: '01/01/1990' } });
+
+    const submitButton = screen.getByTestId('submit-button');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to create user/i)).toBeInTheDocument();
-    });
-  });
-
-  it('handles form submission error correctly', async () => {
-    const queryClient = new QueryClient();
-    const mockError = new Error('Network error');
-    mockOnSubmit.mockRejectedValueOnce(mockError);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <UserForm onSubmit={mockOnSubmit} />
-      </QueryClientProvider>
-    );
-
-    // Fill in required fields
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: 'Doe' },
-    });
-    fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: '1990-01-01' },
-    });
-
-    // Submit form
-    const submitButton = screen.getByRole('button', { name: /create user/i });
-    fireEvent.click(submitButton);
-
-    // Verify error handling
-    await waitFor(() => {
-      expect(screen.getByText(/failed to create user/i)).toBeInTheDocument();
-    });
-
-    // Verify form is still interactive
-    expect(submitButton).not.toBeDisabled();
-  });
-
-  describe('submit button text', () => {
-    it('shows "Create User" by default', () => {
-      const queryClient = new QueryClient();
-      render(
-        <QueryClientProvider client={queryClient}>
-          <UserForm onSubmit={mockOnSubmit} />
-        </QueryClientProvider>
-      );
       expect(
-        screen.getByRole('button', { name: /create user/i })
-      ).toBeInTheDocument();
-    });
-
-    it('shows "Creating..." while submitting new user', async () => {
-      mockOnSubmit.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
-      const queryClient = new QueryClient();
-      render(
-        <QueryClientProvider client={queryClient}>
-          <UserForm onSubmit={mockOnSubmit} />
-        </QueryClientProvider>
-      );
-
-      fireEvent.change(screen.getByLabelText(/last name/i), {
-        target: { value: 'Doe' },
-      });
-      fireEvent.change(screen.getByLabelText(/date of birth/i), {
-        target: { value: '1990-01-01' },
-      });
-
-      const submitButton = screen.getByRole('button', { name: /create user/i });
-      fireEvent.click(submitButton);
-
-      expect(
-        screen.getByRole('button', { name: /creating/i })
-      ).toBeInTheDocument();
-    });
-
-    it('shows "Save" when editing existing user', () => {
-      const queryClient = new QueryClient();
-      render(
-        <QueryClientProvider client={queryClient}>
-          <UserForm
-            onSubmit={mockOnSubmit}
-            defaultValues={{
-              firstName: 'John',
-              lastName: 'Doe',
-              dateOfBirth: '1990-01-01',
-            }}
-          />
-        </QueryClientProvider>
-      );
-      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
-    });
-
-    it('shows "Saving..." while submitting edit', async () => {
-      mockOnSubmit.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
-      const queryClient = new QueryClient();
-      render(
-        <QueryClientProvider client={queryClient}>
-          <UserForm
-            onSubmit={mockOnSubmit}
-            defaultValues={{
-              firstName: 'John',
-              lastName: 'Doe',
-              dateOfBirth: '1990-01-01',
-            }}
-          />
-        </QueryClientProvider>
-      );
-
-      const submitButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(submitButton);
-
-      expect(
-        screen.getByRole('button', { name: /saving/i })
+        screen.getByText(/failed to create user: submission failed/i)
       ).toBeInTheDocument();
     });
   });

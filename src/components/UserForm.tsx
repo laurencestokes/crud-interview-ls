@@ -82,6 +82,7 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
           fullWidth
           error={!!errors.firstName}
           helperText={errors.firstName?.message}
+          inputProps={{ 'data-testid': 'first-name-input' }}
         />
 
         <TextField
@@ -93,6 +94,7 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
           fullWidth
           error={!!errors.lastName}
           helperText={errors.lastName?.message}
+          inputProps={{ 'data-testid': 'last-name-input' }}
         />
 
         <Controller
@@ -114,6 +116,7 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
                     required: true,
                     error: !!errors.dateOfBirth,
                     helperText: errors.dateOfBirth?.message,
+                    inputProps: { 'data-testid': 'date-of-birth-input' },
                   },
                 }}
                 maxDate={new Date()}
@@ -128,6 +131,7 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
           color="primary"
           size="large"
           disabled={isSubmitting}
+          data-testid="submit-button"
         >
           {isSubmitting
             ? defaultValues && defaultValues.lastName

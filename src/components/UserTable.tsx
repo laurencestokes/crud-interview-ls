@@ -255,6 +255,7 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
+                  data-testid="select-all-checkbox"
                   indeterminate={
                     selected.length > 0 &&
                     selected.length < (users?.length || 0)
@@ -281,6 +282,7 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
               </ResizableTableCell>
               <ResizableTableCell style={{ width: columnWidths.lastName }}>
                 <TableSortLabel
+                  data-testid="sort-last-name"
                   active={orderBy === 'lastName'}
                   direction={orderBy === 'lastName' ? order : 'asc'}
                   onClick={() => handleRequestSort('lastName')}
@@ -339,6 +341,7 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
                     style={{ width: columnWidths.actions }}
                   >
                     <IconButton
+                      data-testid={`edit-user-${user.id}`}
                       color="primary"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -349,6 +352,7 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
                       <EditIcon />
                     </IconButton>
                     <IconButton
+                      data-testid={`delete-user-${user.id}`}
                       color="error"
                       onClick={(e) => {
                         e.stopPropagation();
