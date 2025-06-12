@@ -3,8 +3,9 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, IconButton, CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { format, parseISO, isValid } from 'date-fns';
 import { User } from '../types';
+import { formatDate } from '../utils/date';
+import { fetchUsers } from '../api/users';
 
 interface UserTableProps {
   onEdit?: (user: User) => void;
@@ -13,18 +14,6 @@ interface UserTableProps {
   searchTerm?: string;
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
-
-const formatDate = (dateString: string): string => {
-  try {
-    const date = parseISO(dateString);
-    if (!isValid(date)) {
-      return dateString;
-    }
-    return format(date, 'dd/MM/yyyy');
-  } catch {
-    return dateString;
-  }
-};
 
 const UserTable = ({
   onEdit,
@@ -38,14 +27,7 @@ const UserTable = ({
     error,
   } = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: async () => {
-      const response = await fetch('https://example.com/user');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
-      return data.users;
-    },
+    queryFn: fetchUsers,
   });
 
   const columns: GridColDef[] = [
@@ -123,7 +105,7 @@ const UserTable = ({
   );
 
   return (
-    <Box sx={{ width: '100%', height: 440 }}>
+    <Box sx={{ width: '100%', flexGrow: 1, height: '100%' }}>
       <DataGrid
         rows={filteredUsers}
         columns={columns}

@@ -29,13 +29,18 @@ type UserFormValues = z.infer<typeof userSchema>;
 interface UserFormProps {
   onSubmit?: (user: UserFormValues) => void;
   defaultValues?: Partial<UserFormValues>;
+  isSubmitting?: boolean;
 }
 
-const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
+const UserForm = ({
+  onSubmit,
+  defaultValues,
+  isSubmitting: externalIsSubmitting,
+}: UserFormProps) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting: formIsSubmitting },
     reset,
     setError,
     trigger,
@@ -130,10 +135,10 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
           variant="contained"
           color="primary"
           size="large"
-          disabled={isSubmitting}
+          disabled={externalIsSubmitting || formIsSubmitting}
           data-testid="submit-button"
         >
-          {isSubmitting
+          {externalIsSubmitting || formIsSubmitting
             ? defaultValues && defaultValues.lastName
               ? 'Saving...'
               : 'Creating...'

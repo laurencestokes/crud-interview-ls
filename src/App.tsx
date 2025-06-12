@@ -15,6 +15,7 @@ import {
   IconButton,
   Grid,
   TextField,
+  Snackbar,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AddIcon from '@mui/icons-material/Add';
@@ -28,43 +29,10 @@ import {
 import UserForm from './components/UserForm';
 import UserTable from './components/UserTable';
 import { User } from './types';
+import { fetchUsers, createUser, updateUser, deleteUser } from './api/users';
+import { useSnackbar } from './hooks/useSnackbar';
 
 const queryClient = new QueryClient();
-
-// API endpoints (handled by MSW)
-const fetchUsers = async (): Promise<User[]> => {
-  const res = await fetch('https://example.com/user');
-  if (!res.ok) throw new Error('Failed to fetch users');
-  const data = await res.json();
-  return data.users;
-};
-
-const createUser = async (user: Omit<User, 'id'>): Promise<User> => {
-  const res = await fetch('https://example.com/user', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(user),
-  });
-  if (!res.ok) throw new Error('Failed to create user');
-  return res.json();
-};
-
-const updateUser = async (user: User): Promise<User> => {
-  const res = await fetch(`https://example.com/user/${user.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(user),
-  });
-  if (!res.ok) throw new Error('Failed to update user');
-  return user;
-};
-
-const deleteUser = async (id: string): Promise<void> => {
-  const res = await fetch(`https://example.com/user/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error('Failed to delete user');
-};
 
 // Utility for random user generation
 const randomNames = [
@@ -104,8 +72,8 @@ function App() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   // Fetch users
   const { isLoading, isError } = useQuery<User[]>({
@@ -116,45 +84,71 @@ function App() {
   // Create user mutation
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setDialogOpen(false);
+      const userName =
+        data.firstName && data.lastName
+          ? `${data.firstName} ${data.lastName}`
+          : 'User';
+      showSuccess(`${userName} created successfully`);
     },
-    onError: () => setError('Failed to create user'),
+    onError: (error) => {
+      showError(
+        error instanceof Error ? error.message : 'Failed to create user'
+      );
+    },
   });
 
   // Update user mutation
   const updateMutation = useMutation({
     mutationFn: updateUser,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setDialogOpen(false);
+      showSuccess(
+        `User ${data.firstName} ${data.lastName} updated successfully`
+      );
     },
-    onError: () => setError('Failed to update user'),
+    onError: (error) => {
+      showError(
+        error instanceof Error ? error.message : 'Failed to update user'
+      );
+    },
   });
 
   // Delete user mutation
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
-    onError: () => setError('Failed to delete user'),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      // Get the user from the cache to show their name
+      const users = queryClient.getQueryData<User[]>(['users']);
+      const deletedUser = users?.find((user) => user.id === variables);
+      const userName = deletedUser
+        ? `${deletedUser.firstName} ${deletedUser.lastName}`
+        : 'User';
+      showSuccess(`${userName} deleted successfully`);
+    },
+    onError: (error) => {
+      showError(
+        error instanceof Error ? error.message : 'Failed to delete user'
+      );
+    },
   });
 
   const handleOpenAdd = () => {
     setEditingUser(null);
     setDialogOpen(true);
-    setError(null);
   };
 
   const handleOpenEdit = (user: User) => {
     setEditingUser(user);
     setDialogOpen(true);
-    setError(null);
   };
 
   const handleClose = () => {
     setDialogOpen(false);
-    setError(null);
   };
 
   const handleGenerateRandomUser = useCallback(() => {
@@ -171,8 +165,7 @@ function App() {
   }, [createMutation]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f6fa' }}>
-      {/* AppBar/Header */}
+    <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
           <Avatar
@@ -187,8 +180,7 @@ function App() {
           </IconButton>
         </Toolbar>
       </AppBar>
-
-      <Container sx={{ marginTop: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {/* Search/Add User Row */}
         <Grid container spacing={2} alignItems="center" marginBottom={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -200,18 +192,18 @@ function App() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: 'right' }}>
+          <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: 'left' }}>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleOpenAdd}
-              sx={{ borderRadius: 8 }}
+              sx={{ borderRadius: 8, mt: 1, mr: 1 }}
             >
               Add New User
             </Button>
             <Button
               variant="outlined"
-              sx={{ borderRadius: 8, ml: 2 }}
+              sx={{ borderRadius: 8, mt: 1 }}
               onClick={handleGenerateRandomUser}
             >
               Generate Random User
@@ -220,8 +212,9 @@ function App() {
         </Grid>
 
         <Paper sx={{ mt: 4, p: 3, borderRadius: 2, boxShadow: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          </Box>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}
+          ></Box>
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
@@ -234,30 +227,75 @@ function App() {
               onDelete={deleteMutation.mutate}
               isDeleting={deleteMutation.isPending}
               searchTerm={searchTerm}
-              onSearchChange={e => setSearchTerm(e.target.value)}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
             />
           )}
         </Paper>
 
-        {/* Add/Edit User Dialog */}
-        <Dialog open={dialogOpen} onClose={handleClose} fullWidth maxWidth="xs">
-          <DialogTitle>{editingUser ? 'Edit User' : 'Add User'}</DialogTitle>
-          <UserForm
-            defaultValues={editingUser || undefined}
-            onSubmit={(data) => {
-              if (editingUser) {
-                updateMutation.mutate({ ...editingUser, ...data });
-              } else {
-                createMutation.mutate({
-                  ...data,
-                  firstName: data.firstName ?? '',
-                });
+        {/* User Form Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleClose}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              p: 2,
+            },
+          }}
+        >
+          <DialogTitle sx={{ pb: 2 }}>
+            {editingUser ? 'Edit User' : 'Add New User'}
+          </DialogTitle>
+          <Box sx={{ p: 2 }}>
+            <UserForm
+              defaultValues={editingUser || undefined}
+              onSubmit={(data) => {
+                if (editingUser) {
+                  updateMutation.mutate({ ...editingUser, ...data });
+                } else {
+                  createMutation.mutate(data);
+                }
+              }}
+              isSubmitting={
+                createMutation.isPending || updateMutation.isPending
               }
-              handleClose();
-            }}
-          />
+            />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 2,
+                mt: 3,
+              }}
+            >
+              <Button
+                variant="outlined"
+                onClick={handleClose}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </Box>
         </Dialog>
       </Container>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={hideSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={hideSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
