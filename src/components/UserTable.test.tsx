@@ -44,7 +44,7 @@ describe('UserTable', () => {
   });
 
   it('renders loading state', () => {
-    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
+    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => { }));
     renderWithQueryClient(
       <UserTable onEdit={mockOnEdit} onDelete={mockOnDelete} />
     );
@@ -158,7 +158,6 @@ describe('UserTable', () => {
     });
 
     const checkboxes = screen.getAllByRole('checkbox', { hidden: true });
-    console.log('checkboxes', checkboxes);
     fireEvent.click(checkboxes[0]); // Get the select all checkbox
 
     // Verify "2 selected" appears
