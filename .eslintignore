@@ -1,0 +1,15 @@
+# Build output
+dist
+build
+
+# Coverage directory
+coverage
+
+# Public assets
+public
+
+# Test setup
+src/setupTests.ts
+
+# Dependencies
+node_modules 
