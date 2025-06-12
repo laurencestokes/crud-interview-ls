@@ -1,4 +1,6 @@
-# User Admin Web Application
+# CRUD Interview App
+
+[![CI](https://github.com/lozstokes/crud-interview/actions/workflows/ci.yml/badge.svg)](https://github.com/lozstokes/crud-interview/actions/workflows/ci.yml)
 
 This project is a simple CRUD Front End built with ReactJS, using TypeScript, TanStack React Query, and Material UI.
 
