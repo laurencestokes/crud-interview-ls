@@ -1,4 +1,4 @@
-## 0.1.0 (2025-06-12)
+## 1.0.0 (2025-06-12)
 
 * chore: add CI workflow for automated validate and testing ([b7f8105](https://github.com/laurencestokes/crud-interview-ls/commit/b7f8105))
 * chore: add coverage and test files to eslintignore ([f238657](https://github.com/laurencestokes/crud-interview-ls/commit/f238657))
@@ -21,6 +21,10 @@
 * chore: update package.json to add deployment scripts and new dependencies for gh-pages ([9351908](https://github.com/laurencestokes/crud-interview-ls/commit/9351908))
 * chore: update README to reflect project name change and add CI badge ([9017a29](https://github.com/laurencestokes/crud-interview-ls/commit/9017a29))
 * chore: update README with new CI badge and reformat project description ([b6a9f65](https://github.com/laurencestokes/crud-interview-ls/commit/b6a9f65))
+* chore: update version script in package.json to remove redundant argument ([2df9236](https://github.com/laurencestokes/crud-interview-ls/commit/2df9236))
+* docs: add coverage badges to README for better visibility of test metrics ([bf6c83e](https://github.com/laurencestokes/crud-interview-ls/commit/bf6c83e))
+* docs: enhance README with detailed project overview, quick start guide, and versioning instructions ([af5bc46](https://github.com/laurencestokes/crud-interview-ls/commit/af5bc46))
+* 0.1.0 ([f8a218e](https://github.com/laurencestokes/crud-interview-ls/commit/f8a218e))
 * fix: add missing newline at end of package.json file ([2e2b48a](https://github.com/laurencestokes/crud-interview-ls/commit/2e2b48a))
 * feat: add coverage reporting configuration to Jest and update badge generation scripts ([5cfb517](https://github.com/laurencestokes/crud-interview-ls/commit/5cfb517))
 * feat: add MUI DataGrid for user management and implement search functionality; update package.json f ([1f8f2a1](https://github.com/laurencestokes/crud-interview-ls/commit/1f8f2a1))
@@ -33,8 +37,8 @@
 * test: enhance UserForm and UserList tests with error handling and loading states ([24f9f3a](https://github.com/laurencestokes/crud-interview-ls/commit/24f9f3a))
 * test: enhance UserForm and UserTable tests with act for better async handling ([ce75d51](https://github.com/laurencestokes/crud-interview-ls/commit/ce75d51))
 * test: enhance UserForm and UserTable tests with improved error handling, loading states, and data-te ([9c5d27a](https://github.com/laurencestokes/crud-interview-ls/commit/9c5d27a))
-* docs: add coverage badges to README for better visibility of test metrics ([bf6c83e](https://github.com/laurencestokes/crud-interview-ls/commit/bf6c83e))
 * refactor: clean up code formatting and improve readability across multiple components ([f45808c](https://github.com/laurencestokes/crud-interview-ls/commit/f45808c))
+
 
 
 
