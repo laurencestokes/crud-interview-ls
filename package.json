@@ -21,7 +21,8 @@
     "test:badges": "yarn test-coverage && jest-coverage-badges",
     "test:readme-badges": "yarn test:badges && jest-coverage-badges output badges",
     "prepublish": "rm -rf dist && tsc",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
