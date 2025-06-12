@@ -2,6 +2,11 @@
 
 This project is a simple CRUD Front End built with ReactJS, using TypeScript, TanStack React Query, and Material UI.
 
+![Statements](./badges/badge-statements.svg)
+![Branches](./badges/badge-branches.svg)
+![Functions](./badges/badge-functions.svg)
+![Lines](./badges/badge-lines.svg)
+
 ## Prerequisites
 
 - Node.js (v14 or higher)
