@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Box,
   Typography,
@@ -9,7 +9,15 @@ import {
   DialogTitle,
   CircularProgress,
   Alert,
+  AppBar,
+  Toolbar,
+  Avatar,
+  IconButton,
+  Grid,
+  TextField,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AddIcon from '@mui/icons-material/Add';
 import {
   useQuery,
   useMutation,
@@ -58,11 +66,46 @@ const deleteUser = async (id: string): Promise<void> => {
   if (!res.ok) throw new Error('Failed to delete user');
 };
 
+// Utility for random user generation
+const randomNames = [
+  { first: 'Alice', last: 'Johnson' },
+  { first: 'Bob', last: 'Smith' },
+  { first: 'Charlie', last: 'Brown' },
+  { first: 'Diana', last: 'Evans' },
+  { first: 'Eve', last: 'Williams' },
+  { first: 'Frank', last: 'Garcia' },
+  { first: 'Grace', last: 'Martinez' },
+  { first: 'Henry', last: 'Davis' },
+  { first: 'Isabella', last: 'Rodriguez' },
+  { first: 'Jack', last: 'Hernandez' },
+  { first: 'Katherine', last: 'Lopez' },
+  { first: 'Liam', last: 'Gomez' },
+  { first: 'Mia', last: 'Perez' },
+  { first: 'Noah', last: 'Sanchez' },
+  { first: 'Olivia', last: 'Rivera' },
+  { first: 'Parker', last: 'Torres' },
+  { first: 'Quinn', last: 'Gonzalez' },
+  { first: 'Ryan', last: 'Flores' },
+  { first: 'Sophia', last: 'Lopez' },
+  { first: 'Thomas', last: 'Garcia' },
+  { first: 'Uma', last: 'Martinez' },
+  { first: 'Victor', last: 'Davis' },
+  { first: 'Wendy', last: 'Rodriguez' },
+  { first: 'Xavier', last: 'Hernandez' },
+  { first: 'Yara', last: 'Lopez' },
+  { first: 'Zane', last: 'Gomez' },
+];
+
+function getRandomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function App() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch users
   const { isLoading, isError } = useQuery<User[]>({
@@ -114,23 +157,70 @@ function App() {
     setError(null);
   };
 
+  const handleGenerateRandomUser = useCallback(() => {
+    const name = randomNames[getRandomInt(0, randomNames.length - 1)];
+    const year = getRandomInt(1980, 2005);
+    const month = getRandomInt(1, 12).toString().padStart(2, '0');
+    const day = getRandomInt(1, 28).toString().padStart(2, '0');
+    const dateOfBirth = `${year}-${month}-${day}`;
+    createMutation.mutate({
+      firstName: name.first,
+      lastName: name.last,
+      dateOfBirth,
+    });
+  }, [createMutation]);
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f6fa', py: 6 }}>
-      <Container maxWidth="sm">
-        <Typography
-          variant="h4"
-          align="center"
-          color="primary"
-          fontWeight={700}
-          gutterBottom
-        >
-          User Management
-        </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f6fa' }}>
+      {/* AppBar/Header */}
+      <AppBar position="static">
+        <Toolbar>
+          <Avatar
+            src="https://images.unsplash.com/photo-1549923746-c502d488b3ea"
+            sx={{ width: 40, height: 40, marginRight: 2 }}
+          />
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            User Management
+          </Typography>
+          <IconButton color="inherit">
+            <SettingsIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      <Container sx={{ marginTop: 4 }}>
+        {/* Search/Add User Row */}
+        <Grid container spacing={2} alignItems="center" marginBottom={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label="Search Users"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: 'right' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAdd}
+              sx={{ borderRadius: 8 }}
+            >
+              Add New User
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{ borderRadius: 8, ml: 2 }}
+              onClick={handleGenerateRandomUser}
+            >
+              Generate Random User
+            </Button>
+          </Grid>
+        </Grid>
+
         <Paper sx={{ mt: 4, p: 3, borderRadius: 2, boxShadow: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-            <Button variant="contained" onClick={handleOpenAdd}>
-              Add User
-            </Button>
           </Box>
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -143,6 +233,8 @@ function App() {
               onEdit={handleOpenEdit}
               onDelete={deleteMutation.mutate}
               isDeleting={deleteMutation.isPending}
+              searchTerm={searchTerm}
+              onSearchChange={e => setSearchTerm(e.target.value)}
             />
           )}
         </Paper>

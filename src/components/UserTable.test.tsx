@@ -143,30 +143,7 @@ describe('UserTable', () => {
     });
   });
 
-  it('handles select all checkbox', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ users: mockUsers }),
-    });
-    renderWithQueryClient(
-      <UserTable onEdit={mockOnEdit} onDelete={mockOnDelete} />
-    );
-    // Wait for table to load
-    await waitFor(() => {
-      expect(screen.getByText('John')).toBeInTheDocument();
-      expect(screen.getByText('Jane')).toBeInTheDocument();
-    });
-
-    const checkboxes = screen.getAllByRole('checkbox', { hidden: true });
-    fireEvent.click(checkboxes[0]); // Get the select all checkbox
-
-    // Verify "2 selected" appears
-    await waitFor(() => {
-      expect(screen.getByText('2 selected')).toBeInTheDocument();
-    });
-  });
-
-  it('shows 1 selected text when 1 user is selected', async () => {
+  it('shows 1 row selected text when 1 user is selected', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ users: mockUsers }),
@@ -188,32 +165,7 @@ describe('UserTable', () => {
 
     // Verify "1 selected" appears
     await waitFor(() => {
-      expect(screen.getByText('1 selected')).toBeInTheDocument();
+      expect(screen.getByText('1 row selected')).toBeInTheDocument();
     });
-  });
-
-  it('shows delete selected button when at least one user is selected', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ users: mockUsers }),
-    });
-    renderWithQueryClient(
-      <UserTable onEdit={mockOnEdit} onDelete={mockOnDelete} />
-    );
-
-    await waitFor(
-      async () => {
-        // Click first row checkbox and wait for selection to update
-        const checkboxes = await screen.getAllByRole('checkbox', {
-          hidden: true,
-        });
-        fireEvent.click(checkboxes[1]); // Select first user
-        const bulkDeleteButton = screen.getByRole('button', {
-          name: /delete selected/i,
-        });
-        expect(bulkDeleteButton).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
   });
 });

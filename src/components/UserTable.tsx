@@ -1,108 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  CircularProgress,
-  Alert,
-  Box,
-  IconButton,
-  TableSortLabel,
-  Checkbox,
-  Button,
-  Toolbar,
-  alpha,
-  styled,
-} from '@mui/material';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { Box, IconButton, CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format, parseISO, isValid } from 'date-fns';
 import { User } from '../types';
-import { useState } from 'react';
 
 interface UserTableProps {
   onEdit?: (user: User) => void;
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
+  searchTerm?: string;
+  onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
-
-type Order = 'asc' | 'desc';
-type OrderBy = keyof User;
-
-const StyledTableHead = styled(TableHead)(({ theme }) => ({
-  '& .MuiTableCell-head': {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    fontWeight: 'bold',
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.primary.main, 0.8),
-    },
-    '& .MuiTableSortLabel-root': {
-      color: theme.palette.primary.contrastText,
-      '&:hover': {
-        color: theme.palette.primary.contrastText,
-      },
-      '&.Mui-active': {
-        color: theme.palette.primary.contrastText,
-        '& .MuiTableSortLabel-icon': {
-          color: theme.palette.primary.contrastText,
-        },
-      },
-    },
-  },
-}));
-
-const ResizableTableCell = styled(TableCell)({
-  position: 'relative',
-  '&:hover .resize-handle': {
-    opacity: 1,
-  },
-});
-
-const ResizeHandle = styled('div')(({ theme }) => ({
-  position: 'absolute',
-  right: 0,
-  top: 0,
-  bottom: 0,
-  width: '4px',
-  cursor: 'col-resize',
-  opacity: 0,
-  backgroundColor: theme.palette.primary.main,
-  '&:hover': {
-    opacity: 1,
-  },
-}));
 
 const formatDate = (dateString: string): string => {
   try {
     const date = parseISO(dateString);
     if (!isValid(date)) {
-      console.error('Invalid date:', dateString);
       return dateString;
     }
     return format(date, 'dd/MM/yyyy');
-  } catch (error) {
-    console.error('Error formatting date:', error);
+  } catch {
     return dateString;
   }
 };
 
-const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
-  const [order, setOrder] = useState<Order>('asc');
-  const [orderBy, setOrderBy] = useState<OrderBy>('lastName');
-  const [selected, setSelected] = useState<string[]>([]);
-  const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>({
-    firstName: 150,
-    lastName: 150,
-    dateOfBirth: 150,
-    actions: 100,
-  });
-
+const UserTable = ({ onEdit, onDelete, isDeleting, searchTerm = '' }: UserTableProps) => {
   const {
     data: users,
     isLoading,
@@ -119,81 +43,50 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
     },
   });
 
-  const handleRequestSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = users?.map((n) => n.id) || [];
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (id: string) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
-
-  const handleResizeStart = (column: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.pageX;
-    const startWidth = columnWidths[column];
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth + (e.pageX - startX);
-      if (newWidth > 50) {
-        // Minimum width
-        setColumnWidths((prev) => ({
-          ...prev,
-          [column]: newWidth,
-        }));
-      }
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  const handleBulkDelete = () => {
-    selected.forEach((id) => onDelete?.(id));
-    setSelected([]);
-  };
-
-  const isSelected = (id: string) => selected.indexOf(id) !== -1;
-
-  const sortedUsers = users?.slice().sort((a, b) => {
-    const aValue = a[orderBy] || '';
-    const bValue = b[orderBy] || '';
-    if (order === 'asc') {
-      return aValue < bValue ? -1 : 1;
-    }
-    return aValue > bValue ? -1 : 1;
-  });
+  const columns: GridColDef[] = [
+    { field: 'firstName', headerName: 'First Name', flex: 1, minWidth: 120 },
+    { field: 'lastName', headerName: 'Last Name', flex: 1, minWidth: 120 },
+    {
+      field: 'dateOfBirth',
+      headerName: 'Date of Birth',
+      flex: 1,
+      minWidth: 140,
+      valueFormatter: (params: string) => formatDate(params as string),
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      sortable: false,
+      filterable: false,
+      resizable: false,
+      disableColumnMenu: true,
+      flex: 1,
+      align: 'right',
+      headerAlign: 'right',
+      minWidth: 120,
+      renderCell: (params: GridRenderCellParams) => (
+        <Box>
+          <IconButton
+            data-testid={`edit-user-${params.row.id}`}
+            color="primary"
+            onClick={() => onEdit?.(params.row)}
+            size="small"
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            data-testid={`delete-user-${params.row.id}`}
+            color="error"
+            onClick={() => onDelete?.(params.row.id)}
+            disabled={isDeleting}
+            size="small"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -206,170 +99,48 @@ const UserTable = ({ onEdit, onDelete, isDeleting }: UserTableProps) => {
   if (error) {
     return (
       <Alert severity="error">
-        Failed to load users. Please try again later.
+        Failed to load users. Please try again.
       </Alert>
     );
   }
 
   if (!users?.length) {
     return (
-      <Typography color="text.secondary" align="center">
-        No users found. Create your first user above!
-      </Typography>
+      <Box p={2}>
+        <Alert severity="info">No users found. Create your first user!</Alert>
+      </Box>
     );
   }
 
+  // Filter users by search term
+  const filteredUsers = users.filter(
+    (user) =>
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <Box>
-      {selected.length > 0 && (
-        <Toolbar
-          sx={{
-            pl: { sm: 2 },
-            pr: { xs: 1, sm: 1 },
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-            borderRadius: 1,
-            mb: 2,
-          }}
-        >
-          <Typography
-            sx={{ flex: '1 1 100%' }}
-            color="inherit"
-            variant="subtitle1"
-          >
-            {selected.length} selected
-          </Typography>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={handleBulkDelete}
-            disabled={isDeleting}
-            startIcon={<DeleteIcon />}
-          >
-            Delete Selected
-          </Button>
-        </Toolbar>
-      )}
-      <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
-        <Table stickyHeader>
-          <StyledTableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  data-testid="select-all-checkbox"
-                  indeterminate={
-                    selected.length > 0 &&
-                    selected.length < (users?.length || 0)
-                  }
-                  checked={
-                    users?.length > 0 && selected.length === users?.length
-                  }
-                  onChange={handleSelectAllClick}
-                  sx={{ color: 'inherit' }}
-                />
-              </TableCell>
-              <ResizableTableCell style={{ width: columnWidths.firstName }}>
-                <TableSortLabel
-                  active={orderBy === 'firstName'}
-                  direction={orderBy === 'firstName' ? order : 'asc'}
-                  onClick={() => handleRequestSort('firstName')}
-                >
-                  First Name
-                </TableSortLabel>
-                <ResizeHandle
-                  className="resize-handle"
-                  onMouseDown={(e) => handleResizeStart('firstName', e)}
-                />
-              </ResizableTableCell>
-              <ResizableTableCell style={{ width: columnWidths.lastName }}>
-                <TableSortLabel
-                  data-testid="sort-last-name"
-                  active={orderBy === 'lastName'}
-                  direction={orderBy === 'lastName' ? order : 'asc'}
-                  onClick={() => handleRequestSort('lastName')}
-                >
-                  Last Name
-                </TableSortLabel>
-                <ResizeHandle
-                  className="resize-handle"
-                  onMouseDown={(e) => handleResizeStart('lastName', e)}
-                />
-              </ResizableTableCell>
-              <ResizableTableCell style={{ width: columnWidths.dateOfBirth }}>
-                <TableSortLabel
-                  active={orderBy === 'dateOfBirth'}
-                  direction={orderBy === 'dateOfBirth' ? order : 'asc'}
-                  onClick={() => handleRequestSort('dateOfBirth')}
-                >
-                  Date of Birth
-                </TableSortLabel>
-                <ResizeHandle
-                  className="resize-handle"
-                  onMouseDown={(e) => handleResizeStart('dateOfBirth', e)}
-                />
-              </ResizableTableCell>
-              <TableCell align="right" style={{ width: columnWidths.actions }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {sortedUsers?.map((user) => {
-              const isItemSelected = isSelected(user.id);
-              return (
-                <TableRow
-                  key={user.id}
-                  hover
-                  onClick={() => handleClick(user.id)}
-                  role="checkbox"
-                  aria-checked={isItemSelected}
-                  selected={isItemSelected}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox checked={isItemSelected} />
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.firstName }}>
-                    {user.firstName || ''}
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.lastName }}>
-                    {user.lastName}
-                  </TableCell>
-                  <TableCell style={{ width: columnWidths.dateOfBirth }}>
-                    {formatDate(user.dateOfBirth)}
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    style={{ width: columnWidths.actions }}
-                  >
-                    <IconButton
-                      data-testid={`edit-user-${user.id}`}
-                      color="primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit?.(user);
-                      }}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      data-testid={`delete-user-${user.id}`}
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.(user.id);
-                      }}
-                      disabled={isDeleting}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+    <Box sx={{ width: '100%', height: 440 }}>
+      <DataGrid
+        rows={filteredUsers}
+        columns={columns}
+        getRowId={(row) => row.id}
+        checkboxSelection
+        disableRowSelectionOnClick
+        autosizeOnMount
+        pageSizeOptions={[5, 10, 25]}
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        sx={{
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: 'primary.main',
+            fontSize: 14,
+            borderBottom: '2px solid #1976d2',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 'bold',
+          },
+        }}
+      />
     </Box>
   );
 };
