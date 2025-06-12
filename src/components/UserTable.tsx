@@ -26,7 +26,12 @@ const formatDate = (dateString: string): string => {
   }
 };
 
-const UserTable = ({ onEdit, onDelete, isDeleting, searchTerm = '' }: UserTableProps) => {
+const UserTable = ({
+  onEdit,
+  onDelete,
+  isDeleting,
+  searchTerm = '',
+}: UserTableProps) => {
   const {
     data: users,
     isLoading,
@@ -98,9 +103,7 @@ const UserTable = ({ onEdit, onDelete, isDeleting, searchTerm = '' }: UserTableP
 
   if (error) {
     return (
-      <Alert severity="error">
-        Failed to load users. Please try again.
-      </Alert>
+      <Alert severity="error">Failed to load users. Please try again.</Alert>
     );
   }
 
@@ -127,7 +130,6 @@ const UserTable = ({ onEdit, onDelete, isDeleting, searchTerm = '' }: UserTableP
         getRowId={(row) => row.id}
         checkboxSelection
         disableRowSelectionOnClick
-        autosizeOnMount
         pageSizeOptions={[5, 10, 25]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         sx={{
