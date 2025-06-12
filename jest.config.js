@@ -8,4 +8,5 @@ export default {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  coverageReporters: ['json-summary', 'text', 'lcov'],
 };

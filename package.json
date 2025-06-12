@@ -18,8 +18,8 @@
     "test:ci": "jest --ci",
     "test-coverage": "jest --collectCoverage=true",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
-    "test:badges": "yarn test-coverage && jest-coverage-badges",
-    "test:readme-badges": "yarn test:badges && jest-coverage-badges output badges",
+    "test:badges": "yarn test-coverage && jest-coverage-badges --input coverage/coverage-summary.json",
+    "test:readme-badges": "yarn test:badges && jest-coverage-badges --input \"coverage/coverage-summary.json\" --output badges",
     "prepublish": "rm -rf dist && tsc",
     "preview": "vite preview",
     "prepare": "husky install"
