@@ -34,9 +34,12 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setError,
+    trigger,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
-    mode: 'onSubmit',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -54,11 +57,14 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
     });
   }, [defaultValues, reset]);
 
-  const onFormSubmit = (data: UserFormValues) => {
-    onSubmit?.(data);
+  const onFormSubmit = async (data: UserFormValues) => {
+    try {
+      await onSubmit?.(data);
+    } catch (error) {
+      setError('root', { message: 'Failed to create user' });
+    }
   };
 
-  console.log(errors);
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
       <Stack spacing={3}>
@@ -74,7 +80,9 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
 
         <TextField
           label="Last Name"
-          {...register('lastName')}
+          {...register('lastName', {
+            onChange: () => trigger('lastName'),
+          })}
           required
           fullWidth
           error={!!errors.lastName}
@@ -84,11 +92,18 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
         <TextField
           label="Date of Birth"
           type="date"
-          {...register('dateOfBirth')}
+          {...register('dateOfBirth', {
+            onChange: () => trigger('dateOfBirth'),
+          })}
           required
           fullWidth
           error={!!errors.dateOfBirth}
           helperText={errors.dateOfBirth?.message}
+          slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
+          }}
         />
 
         <Button
