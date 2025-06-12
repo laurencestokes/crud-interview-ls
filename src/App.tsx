@@ -31,6 +31,11 @@ import UserTable from './components/UserTable';
 import { User } from './types';
 import { fetchUsers, createUser, updateUser, deleteUser } from './api/users';
 import { useSnackbar } from './hooks/useSnackbar';
+import { useThemeMode } from './theme/ThemeProvider';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Switch from '@mui/material/Switch';
+import { useTheme } from '@mui/material/styles';
 
 const queryClient = new QueryClient();
 
@@ -74,6 +79,11 @@ function App() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const { mode, toggleTheme } = useThemeMode();
+  const theme = useTheme();
 
   // Fetch users
   const { isLoading, isError } = useQuery<User[]>({
@@ -165,7 +175,14 @@ function App() {
   }, [createMutation]);
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        minHeight: '100vh',
+        bgcolor: theme.palette.background.default,
+        transition: 'background-color 0.3s',
+      }}
+    >
       <AppBar position="static">
         <Toolbar>
           <Avatar
@@ -175,9 +192,26 @@ function App() {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             User Management
           </Typography>
-          <IconButton color="inherit">
+          <IconButton
+            color="inherit"
+            onClick={(e) => setSettingsAnchorEl(e.currentTarget)}
+          >
             <SettingsIcon />
           </IconButton>
+          <Menu
+            anchorEl={settingsAnchorEl}
+            open={Boolean(settingsAnchorEl)}
+            onClose={() => setSettingsAnchorEl(null)}
+          >
+            <MenuItem>
+              <Switch
+                checked={mode === 'dark'}
+                onChange={toggleTheme}
+                inputProps={{ 'aria-label': 'toggle dark mode' }}
+              />
+              {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>

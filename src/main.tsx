@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App.tsx';
 import './index.css';
+import { ThemeProvider } from './theme/ThemeProvider';
 
 const isProd = import.meta.env.PROD;
 
@@ -29,7 +30,9 @@ async function enableMocking() {
 enableMocking().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </StrictMode>
   );
 });
