@@ -179,11 +179,15 @@ describe('UserForm', () => {
           <UserForm onSubmit={mockOnSubmit} />
         </QueryClientProvider>
       );
-      expect(screen.getByRole('button', { name: /create user/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /create user/i })
+      ).toBeInTheDocument();
     });
 
     it('shows "Creating..." while submitting new user', async () => {
-      mockOnSubmit.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      mockOnSubmit.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
       const queryClient = new QueryClient();
       render(
         <QueryClientProvider client={queryClient}>
@@ -201,7 +205,9 @@ describe('UserForm', () => {
       const submitButton = screen.getByRole('button', { name: /create user/i });
       fireEvent.click(submitButton);
 
-      expect(screen.getByRole('button', { name: /creating/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /creating/i })
+      ).toBeInTheDocument();
     });
 
     it('shows "Save" when editing existing user', () => {
@@ -222,7 +228,9 @@ describe('UserForm', () => {
     });
 
     it('shows "Saving..." while submitting edit', async () => {
-      mockOnSubmit.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      mockOnSubmit.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
       const queryClient = new QueryClient();
       render(
         <QueryClientProvider client={queryClient}>
@@ -240,7 +248,9 @@ describe('UserForm', () => {
       const submitButton = screen.getByRole('button', { name: /save/i });
       fireEvent.click(submitButton);
 
-      expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /saving/i })
+      ).toBeInTheDocument();
     });
   });
 });

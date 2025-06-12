@@ -5,20 +5,11 @@ import {
   Container,
   Paper,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
   Dialog,
   DialogTitle,
   CircularProgress,
   Alert,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import {
   useQuery,
   useMutation,
@@ -27,13 +18,8 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import UserForm from './components/UserForm';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-}
+import UserTable from './components/UserTable';
+import { User } from './types';
 
 const queryClient = new QueryClient();
 
@@ -79,11 +65,7 @@ function App() {
   const [, setError] = useState<string | null>(null);
 
   // Fetch users
-  const {
-    data: users,
-    isLoading,
-    isError,
-  } = useQuery<User[]>({
+  const { isLoading, isError } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: fetchUsers,
   });
@@ -157,54 +139,11 @@ function App() {
           ) : isError ? (
             <Alert severity="error">Failed to load users.</Alert>
           ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>First Name</TableCell>
-                    <TableCell>Last Name</TableCell>
-                    <TableCell>Date of Birth</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users &&
-                    users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.firstName}</TableCell>
-                        <TableCell>{user.lastName}</TableCell>
-                        <TableCell>{user.dateOfBirth}</TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            color="primary"
-                            onClick={() => handleOpenEdit(user)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            color="error"
-                            onClick={() => deleteMutation.mutate(user.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  {users && users.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        align="center"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        No users found. Add your first user!
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <UserTable
+              onEdit={handleOpenEdit}
+              onDelete={deleteMutation.mutate}
+              isDeleting={deleteMutation.isPending}
+            />
           )}
         </Paper>
 

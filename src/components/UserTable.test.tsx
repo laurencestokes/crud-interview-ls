@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import UserList from './UserList';
+import UserTable from './UserTable';
 
 describe('UserList', () => {
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe('UserList', () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
     await waitFor(() => {
@@ -51,7 +51,7 @@ describe('UserList', () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -72,14 +72,12 @@ describe('UserList', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/failed to load users/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/failed to load users/i)).toBeInTheDocument();
     });
   });
 
@@ -101,14 +99,12 @@ describe('UserList', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/failed to load users/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/failed to load users/i)).toBeInTheDocument();
     });
   });
 
@@ -123,14 +119,12 @@ describe('UserList', () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/no users found/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/no users found/i)).toBeInTheDocument();
     });
   });
 
@@ -154,7 +148,7 @@ describe('UserList', () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <UserList />
+        <UserTable />
       </QueryClientProvider>
     );
 

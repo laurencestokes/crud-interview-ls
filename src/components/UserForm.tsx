@@ -1,8 +1,12 @@
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { TextField, Button, Alert, Stack } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format, isValid, parseISO } from 'date-fns';
 
 const userSchema = z.object({
   firstName: z.string().optional(),
@@ -13,9 +17,8 @@ const userSchema = z.object({
     .refine(
       (val) => {
         if (!val) return false;
-        const selectedDate = new Date(val);
-        const today = new Date();
-        return selectedDate <= today;
+        const date = parseISO(val);
+        return isValid(date) && date <= new Date();
       },
       { message: 'Date of birth cannot be in the future' }
     ),
@@ -36,6 +39,7 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
     reset,
     setError,
     trigger,
+    control,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     mode: 'onChange',
@@ -61,7 +65,9 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
     try {
       await onSubmit?.(data);
     } catch (error) {
-      setError('root', { message: 'Failed to create user' });
+      setError('root', {
+        message: `Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
     }
   };
 
@@ -89,21 +95,31 @@ const UserForm = ({ onSubmit, defaultValues }: UserFormProps) => {
           helperText={errors.lastName?.message}
         />
 
-        <TextField
-          label="Date of Birth"
-          type="date"
-          {...register('dateOfBirth', {
-            onChange: () => trigger('dateOfBirth'),
-          })}
-          required
-          fullWidth
-          error={!!errors.dateOfBirth}
-          helperText={errors.dateOfBirth?.message}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-          }}
+        <Controller
+          name="dateOfBirth"
+          control={control}
+          render={({ field }) => (
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Date of Birth"
+                value={field.value ? parseISO(field.value) : null}
+                onChange={(date) => {
+                  field.onChange(date ? format(date, 'yyyy-MM-dd') : '');
+                  trigger('dateOfBirth');
+                }}
+                format="dd/MM/yyyy"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    error: !!errors.dateOfBirth,
+                    helperText: errors.dateOfBirth?.message,
+                  },
+                }}
+                maxDate={new Date()}
+              />
+            </LocalizationProvider>
+          )}
         />
 
         <Button
