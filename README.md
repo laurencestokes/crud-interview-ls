@@ -1,13 +1,13 @@
 # CRUD Interview App
 
-[![CI](https://github.com/lozstokes/crud-interview/actions/workflows/ci.yml/badge.svg)](https://github.com/lozstokes/crud-interview/actions/workflows/ci.yml)
-
-This project is a simple CRUD Front End built with ReactJS, using TypeScript, TanStack React Query, and Material UI.
+[![CI](https://github.com/laurencestokes/crud-interview-ls/actions/workflows/ci.yml/badge.svg)](https://github.com/laurencestokes/crud-interview-ls/actions/workflows/ci.yml)
 
 ![Statements](./badges/badge-statements.svg)
 ![Branches](./badges/badge-branches.svg)
 ![Functions](./badges/badge-functions.svg)
 ![Lines](./badges/badge-lines.svg)
+
+This project is a simple CRUD Front End built with ReactJS, using TypeScript, TanStack React Query, and Material UI.
 
 ## Prerequisites
 
