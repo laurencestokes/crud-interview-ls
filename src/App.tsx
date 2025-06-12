@@ -14,15 +14,18 @@ import {
   IconButton,
   Dialog,
   DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   CircularProgress,
   Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import UserForm from './components/UserForm';
 
 interface User {
@@ -63,7 +66,9 @@ const updateUser = async (user: User): Promise<User> => {
 };
 
 const deleteUser = async (id: string): Promise<void> => {
-  const res = await fetch(`https://example.com/user/${id}`, { method: 'DELETE' });
+  const res = await fetch(`https://example.com/user/${id}`, {
+    method: 'DELETE',
+  });
   if (!res.ok) throw new Error('Failed to delete user');
 };
 
@@ -71,10 +76,14 @@ function App() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   // Fetch users
-  const { data: users, isLoading, isError } = useQuery<User[]>({
+  const {
+    data: users,
+    isLoading,
+    isError,
+  } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: fetchUsers,
   });
@@ -126,7 +135,13 @@ function App() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f6fa', py: 6 }}>
       <Container maxWidth="sm">
-        <Typography variant="h4" align="center" color="primary" fontWeight={700} gutterBottom>
+        <Typography
+          variant="h4"
+          align="center"
+          color="primary"
+          fontWeight={700}
+          gutterBottom
+        >
           User Management
         </Typography>
         <Paper sx={{ mt: 4, p: 3, borderRadius: 2, boxShadow: 2 }}>
@@ -153,24 +168,36 @@ function App() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {users && users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.firstName}</TableCell>
-                      <TableCell>{user.lastName}</TableCell>
-                      <TableCell>{user.dateOfBirth}</TableCell>
-                      <TableCell align="right">
-                        <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton color="error" onClick={() => deleteMutation.mutate(user.id)} disabled={deleteMutation.isPending}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {users &&
+                    users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.firstName}</TableCell>
+                        <TableCell>{user.lastName}</TableCell>
+                        <TableCell>{user.dateOfBirth}</TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleOpenEdit(user)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() => deleteMutation.mutate(user.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   {users && users.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} align="center" sx={{ color: 'text.secondary' }}>
+                      <TableCell
+                        colSpan={4}
+                        align="center"
+                        sx={{ color: 'text.secondary' }}
+                      >
                         No users found. Add your first user!
                       </TableCell>
                     </TableRow>
